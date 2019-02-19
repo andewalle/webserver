@@ -232,6 +232,8 @@ import java.util.*;
         private String getContentType(String fileRequested) {
             if (fileRequested.endsWith(".htm")  ||  fileRequested.endsWith(".html"))
                 return "text/html";
+            else if(fileRequested.endsWith(".pdf"))
+                return "application/pdf";
             else
                 return "text/plain";
         }
