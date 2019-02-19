@@ -2,12 +2,9 @@
 
 import java.io.*;
 import java.net.*;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.*;
 
-    // The tutorial can be found just here on the SSaurel's Blog :
+// The tutorial can be found just here on the SSaurel's Blog :
 // https://www.ssaurel.com/blog/create-a-simple-http-web-server-in-java
 // Each Client Connection will be managed in a dedicated Thread
     public class JavaHTTPServer implements Runnable{
@@ -39,7 +36,7 @@ import java.util.StringTokenizer;
                     JavaHTTPServer myServer = new JavaHTTPServer(serverConnect.accept());
 
                     if (verbose) {
-                        System.out.println("Connecton opened. (" + new Date() + ")");
+                        System.out.println("Connection opened. (" + new Date() + ")");
                     }
 
                     // create dedicated thread to manage the client connection
@@ -101,11 +98,25 @@ import java.util.StringTokenizer;
 
                 } else {
 
+                    if (fileRequested.endsWith("/")) {
+                        fileRequested += DEFAULT_FILE;
+                    }
+
                     File file = new File(WEB_ROOT, fileRequested);
                     int fileLength = (int) file.length();
                     String content = getContentType(fileRequested);
 
                     if (method.equals("POST")){
+
+
+                        out.println("HTTP/1.1 200 OK");
+                        out.println("Server: Java HTTP Server from SSaurel : 1.0");
+                        out.println("Date: " + new Date());
+                        out.println("Content-type: " + content);
+                        out.println("Content-length: " + fileLength);
+                        out.println(); // blank line between headers and content, very important !
+                        out.flush(); // flush character output stream buffer
+
 
                         if(!content.equals("application/x-www-form-urlencoded")){
                             out.println("Wrong content type");
@@ -116,52 +127,41 @@ import java.util.StringTokenizer;
 
                         String line;
                         while(true){
+
                             if(in.readLine().equals("")){
-                                line = in.readLine();
+                                char[] buf = new char[200];  // TODO: 2019-02-19 Fixa antalet char tecken
+                                in.read(buf);
+
+                                line = new String(buf);
                                 break;
                             }
+
                         }
+
 
                         String[] lines = line.split("&");
+
+                        HashMap<String, String> hM = new HashMap<>();
+
+                        String key;
+                        String value;
+
                         for(String s : lines){
-                            System.out.println(s);
+
+                            String[] temp = s.split("=");
+
+                            key = temp[0];
+                            value = temp[1];
+
+                            hM.put(key, value);
                         }
 
-                        out.println("HTTP/1.1 200 OK");
-                        out.println("Server: Java HTTP Server from SSaurel : 1.0");
-                        out.println("Date: " + new Date());
-                        out.println("Content-type: " + content);
-                        out.println("Content-length: " + fileLength);
-                        out.println(); // blank line between headers and content, very important !
-                        out.flush(); // flush character output stream buffer
-
-                        URL url = new URL("http://localhost:6543/index.html");
-
-                        Map<String, Object> params = new LinkedHashMap<>();
-                        StringBuilder postData = new StringBuilder();
-                        for (Map.Entry<String, Object> param : params.entrySet()){
-
-                            if (postData.length() != 0){
-                                postData.append('&');
-                            }
-                            postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
-                            postData.append('=');
-                            postData.append(URLEncoder.encode(String.valueOf(param.getValue()),"UTF-8"));
+                        for (String i : hM.keySet()
+                             ) {
+                            System.out.println("key: "+ i + " value: " + hM.get(i));
 
                         }
-                        byte[] postDataBytes = postData.toString().getBytes("UTF-8");
 
-//                        Reader inn = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
-//
-//                        for (int c; (c = inn.read()) >=0; )
-//                            System.out.println((char)c);
-
-//                        inn.close();
-
-                    }
-
-                    if (fileRequested.endsWith("/")) {
-                        fileRequested += DEFAULT_FILE;
                     }
 
                     if (method.equals("GET")) { // GET method so we return content
