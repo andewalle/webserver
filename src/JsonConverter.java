@@ -4,13 +4,13 @@ import java.io.*;
 
 public class JsonConverter {
     private Gson gson = new Gson();
-    private Person p;
+    private Object o;
 
-    public JsonConverter(Person p){
-        this.p = p;
+    public JsonConverter(Object o){
+        this.o = o;
     }
 
     public String personToJsonString(){
-        return gson.toJson(p);
+        return gson.toJson(o);
     }
 }

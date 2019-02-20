@@ -108,6 +108,37 @@ import java.util.*;
                         fileRequested += DEFAULT_FILE;
                     }
 
+
+
+
+
+
+
+                    //Helenas
+                    /*if (fileRequested.equals("/jsonoutput")) {
+                        String[] formData = input[input.length-1].split("&");
+                        Person p = new Person(formData[0].replace("fname=",""),
+                                formData[1].replace("lname=",""));
+                        JsonConverter js = new JsonConverter(p);
+                        byte[] jsonData = js.personToJsonString().getBytes();
+                        out.println("HTTP/1.1 200 OK");
+                        out.println("Server: Java HTTP Server from SSaurel : 1.0");
+                        out.println("Date: " + new Date());
+                        out.println("Content-type: application/json; charset=UTF-8");
+                        out.println("Content-length: " + jsonData.length);
+                        out.println();  // blank line between headers and content, very important !
+                        out.flush();    // flush character output stream buffer
+                        dataOut.write(jsonData,0, jsonData.length);
+                        dataOut.flush();
+                    }*/
+                    //Helenas
+
+
+
+
+
+
+
                     File file = new File(WEB_ROOT, fileRequested);
                     int fileLength = (int) file.length();
                     String content = getContentType(fileRequested);
@@ -125,7 +156,7 @@ import java.util.*;
                     }
 
                     if (verbose) {
-                        System.out.println("File " + fileRequested + " of type " + content + " returned");
+                       // System.out.println("File " + fileRequested + " of type " + content + " returned");
                     }
                 }
 
@@ -186,32 +217,27 @@ import java.util.*;
         //This method handles POST requests from the http
         private void requestPost(String content, int fileLength) {
 
-            out.println("HTTP/1.1 200 OK");
-            out.println("Server: Java HTTP Server from SSaurel : 1.0");
-            out.println("Date: " + new Date());
-            out.println("Content-type: " + content);
-            out.println("Content-length: " + fileLength);
-            out.println(); // blank line between headers and content, very important !
-            out.flush(); // flush character output stream buffer
-
-
             if(!content.equals("application/x-www-form-urlencoded")){
-                out.println("Wrong content type");
+                System.out.println("Wrong content type");
             }
             if(fileLength <= 0){
-                out.println("Content length error");
+                System.out.println("Content length error");
             }
 
             String line;
+            int content_length = 0;
             while(true){
-
                 try {
-                    if(in.readLine().equals("")){
-                        char[] buf = new char[200];  // TODO: 2019-02-19 Fixa antalet char tecken
+                    line = in.readLine();
+                    if(line.equals("")){
+                        char[] buf = new char[content_length];
                         in.read(buf);
 
                         line = new String(buf);  //String from the request
                         break;
+                    }
+                    else if( line.startsWith("Content-Length: ")){
+                        content_length = Integer.parseInt(  line.substring(16)  );
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -244,8 +270,30 @@ import java.util.*;
                 System.out.println("key: "+ i + " value: " + hM.get(i));
             }
 
+
             Person person = new Person(hM.get("firstName"), hM.get("lastName"));  //Creating a Person object from the
-                                                                                   //http parameters
+
+            JsonConverter js = new JsonConverter(person);
+            String s = js.personToJsonString();
+
+            byte[] jsonData = s.getBytes();
+
+            out.println("HTTP/1.1 200 OK");
+            out.println("Server: Java HTTP Server from SSaurel : 1.0");
+            out.println("Date: " + new Date());
+            out.println("Content-type: " + getContentType(fileRequested));
+            out.println("Content-length: " + jsonData.length);
+            out.println(); // blank line between headers and content, very important !
+            out.flush(); // flush character output stream buffer
+
+            try {
+                    dataOut.write(jsonData, 0, jsonData.length);
+                    dataOut.flush();
+                    dataOut.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
         }
 
 
@@ -278,6 +326,8 @@ import java.util.*;
                 return "text/html";
             else if(fileRequested.endsWith(".pdf"))
                 return "application/pdf";
+            else if(fileRequested.endsWith(".json"))
+                return "application/json";
             else
                 return "text/plain";
         }
