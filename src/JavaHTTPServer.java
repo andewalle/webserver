@@ -26,6 +26,14 @@ import java.util.*;
             connect = c;
         }
 
+
+        // we manage our particular client connection
+        BufferedReader in = null;
+        PrintWriter out = null;
+        BufferedOutputStream dataOut = null;
+        String fileRequested = null;
+
+        //Server startup
         public static void main(String[] args) {
             try {
                 ServerSocket serverConnect = new ServerSocket(PORT);
@@ -49,11 +57,9 @@ import java.util.*;
             }
         }
 
+        //run is where the requests are made
         @Override
         public void run() {
-            // we manage our particular client connection
-            BufferedReader in = null; PrintWriter out = null; BufferedOutputStream dataOut = null;
-            String fileRequested = null;
 
             try {
                 // we read characters from the client via input stream on the socket
@@ -126,84 +132,21 @@ import java.util.*;
                     int fileLength = (int) file.length();
                     String content = getContentType(fileRequested);
 
+                    //If the http method is POST the requestPost method is called
                     if (method.equals("POST")){
 
-
-                        out.println("HTTP/1.1 200 OK");
-                        out.println("Server: Java HTTP Server from SSaurel : 1.0");
-                        out.println("Date: " + new Date());
-                        out.println("Content-type: " + content);
-                        out.println("Content-length: " + fileLength);
-                        out.println(); // blank line between headers and content, very important !
-                        out.flush(); // flush character output stream buffer
-
-
-                        if(!content.equals("application/x-www-form-urlencoded")){
-                            out.println("Wrong content type");
-                        }
-                        if(fileLength <= 0){
-                            out.println("Content length error");
-                        }
-
-                        String line;
-                        while(true){
-
-                            if(in.readLine().equals("")){
-                                char[] buf = new char[200];  // TODO: 2019-02-19 Fixa antalet char tecken
-                                in.read(buf);
-
-                                line = new String(buf);
-                                break;
-                            }
-
-                        }
-
-
-                        String[] lines = line.split("&");
-
-                        HashMap<String, String> hM = new HashMap<>();
-
-                        String key;
-                        String value;
-
-                        for(String s : lines){
-
-                            String[] temp = s.split("=");
-
-                            key = temp[0];
-                            value = temp[1];
-
-                            hM.put(key, value);
-                        }
-
-                        for (String i : hM.keySet()
-                             ) {
-                            System.out.println("key: "+ i + " value: " + hM.get(i));
-
-                        }
-
+                        requestPost(content, fileLength);
                     }
 
-                    if (method.equals("GET")) { // GET method so we return content
-                        byte[] fileData = readFileData(file, fileLength);
+                    //If the http method is GET the requestPost method is called
+                    else if (method.equals("GET")) { // GET method so we return content
 
-                        // send HTTP Headers
-                        out.println("HTTP/1.1 200 OK");
-                        out.println("Server: Java HTTP Server from SSaurel : 1.0");
-                        out.println("Date: " + new Date());
-                        out.println("Content-type: " + content);
-                        out.println("Content-length: " + fileLength);
-                        out.println(); // blank line between headers and content, very important !
-                        out.flush(); // flush character output stream buffer
-
-                        dataOut.write(fileData, 0, fileLength);
-                        dataOut.flush();
+                        requestGet(content, fileLength, file);
                     }
 
                     if (verbose) {
                         System.out.println("File " + fileRequested + " of type " + content + " returned");
                     }
-
                 }
 
             } catch (FileNotFoundException fnfe) {
@@ -229,9 +172,110 @@ import java.util.*;
                     System.out.println("Connection closed.\n");
                 }
             }
-
-
         }
+
+
+
+
+
+
+
+
+
+        //This method handles GET requests from the http
+        private void requestGet(String content, int fileLength, File file) {
+
+            // send HTTP Headers
+            out.println("HTTP/1.1 200 OK");
+            out.println("Server: Java HTTP Server from SSaurel : 1.0");
+            out.println("Date: " + new Date());
+            out.println("Content-type: " + content);
+            out.println("Content-length: " + fileLength);
+            out.println(); // blank line between headers and content, very important !
+            out.flush(); // flush character output stream buffer
+
+            try {
+                byte[] fileData = readFileData(file, fileLength);
+                dataOut.write(fileData, 0, fileLength);
+                dataOut.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        //This method handles POST requests from the http
+        private void requestPost(String content, int fileLength) {
+
+            out.println("HTTP/1.1 200 OK");
+            out.println("Server: Java HTTP Server from SSaurel : 1.0");
+            out.println("Date: " + new Date());
+            out.println("Content-type: " + content);
+            out.println("Content-length: " + fileLength);
+            out.println(); // blank line between headers and content, very important !
+            out.flush(); // flush character output stream buffer
+
+
+            if(!content.equals("application/x-www-form-urlencoded")){
+                out.println("Wrong content type");
+            }
+            if(fileLength <= 0){
+                out.println("Content length error");
+            }
+
+            String line;
+            while(true){
+
+                try {
+                    if(in.readLine().equals("")){
+                        char[] buf = new char[200];  // TODO: 2019-02-19 Fixa antalet char tecken
+                        in.read(buf);
+
+                        line = new String(buf);  //String from the request
+                        break;
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            String[] lines = line.split("&");   //Splitting the request string (line) at '&' to separate the
+                                                      // parameters and put in the vector "lines"
+
+            HashMap<String, String> hM = new HashMap<>();  //HashMap for storing parameters
+
+            String key;  //Storing temp. string keys for HashMap
+            String value;  //Storing temp. string values for HashMap
+
+            //Looping through vector lines (http parameters)
+            for(String s : lines){
+
+                String[] temp = s.split("=");  //Splitting the parameters in the vector "lines" into key and value
+                                                      //pairs and putting in temp. vector "temp"
+
+                key = temp[0];  //key gets the String-value of each parameters name
+                value = temp[1];  //value gets the String-value of each parameters value
+
+                hM.put(key, value);  //The keys and values are put in the HashMap
+            }
+
+            //Looping and printing the parameters from the HashMap
+            for (String i : hM.keySet()) {
+
+                System.out.println("key: "+ i + " value: " + hM.get(i));
+            }
+
+            Person person = new Person(hM.get("firstName"), hM.get("lastName"));  //Creating a Person object from the
+                                                                                   //http parameters
+        }
+
+
+
+
+
+
+
+
+
 
         private byte[] readFileData(File file, int fileLength) throws IOException {
             FileInputStream fileIn = null;
