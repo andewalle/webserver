@@ -12,7 +12,7 @@ import java.util.*;
         static final File WEB_ROOT = new File(".");
         static final String DEFAULT_FILE = "index.html";
         static final String FILE_NOT_FOUND = "404.html";
-        static final String METHOD_NOT_SUPPORTED = "not_supported.html";
+        static final String METHOD_NOT_SUPPORTED = "not_supported.html"; //this html file is now created so it works.
         // port to listen connection
         static final int PORT = 6543;
 
@@ -63,16 +63,36 @@ import java.util.*;
                 // get binary output stream to client (for requested data)
                 dataOut = new BufferedOutputStream(connect.getOutputStream());
 
-                // get first line of the request from the client
+                //Get the payload from the request, payload is where the data stores kinda ^^
+                StringBuilder payload = new StringBuilder();
+                while (in.ready()){
+                    payload.append((char) in.read());
+                }
+
+                //changed input to read fron payload instead of in
+                String input = payload.toString();
+
+                //we split the string into multiple objects with the newline/carriage return delimiter
+                String[] split = input.split("\r\n");
+
+                //changed due to new method of parsing the payload. (StringTokenizer -> split)
+                String[] parse = split[0].split(" ");
+                String method = parse[0];
+
+                //this is changed due to new method
+                fileRequested = parse[1].toLowerCase();
+
+
+                /*// get first line of the request from the client
                 String input = in.readLine();
                 // we parse the request with a string tokenizer
                 StringTokenizer parse = new StringTokenizer(input);
                 String method = parse.nextToken().toUpperCase(); // we get the HTTP method of the client
                 // we get file requested
-                fileRequested = parse.nextToken().toLowerCase();
+                fileRequested = parse.nextToken().toLowerCase();*/
 
                 // we support only GET and HEAD methods, we check
-                if (!method.equals("GET")  &&  !method.equals("HEAD") && !method.equals("POST")) {
+                if (!method.equals("GET")  &&  !method.equals("HEAD") && !method.equals("POST") && !method.equals("OPTIONS")) {
                     if (verbose) {
                         System.out.println("501 Not Implemented : " + method + " method.");
                     }
