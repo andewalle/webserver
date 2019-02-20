@@ -27,11 +27,7 @@ import java.util.*;
         }
 
 
-        // we manage our particular client connection
-        BufferedReader in = null;
-        PrintWriter out = null;
-        BufferedOutputStream dataOut = null;
-        String fileRequested = null;
+
 
         //Server startup
         public static void main(String[] args) {
@@ -60,6 +56,11 @@ import java.util.*;
         //run is where the requests are made
         @Override
         public void run() {
+            // we manage our particular client connection
+            BufferedReader in = null;
+            PrintWriter out = null;
+            BufferedOutputStream dataOut = null;
+            String fileRequested = null;
 
             try {
                 // we read characters from the client via input stream on the socket
@@ -86,8 +87,11 @@ import java.util.*;
                 String method = parse[0];
 
                 //this is changed due to new method
-                fileRequested = parse[1].toLowerCase();
-
+                try {
+                    fileRequested = parse[1].toLowerCase();
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println("Error: " + e.toString());
+                }
 
                 /*// get first line of the request from the client
                 String input = in.readLine();
@@ -128,20 +132,101 @@ import java.util.*;
                         fileRequested += DEFAULT_FILE;
                     }
 
+                    /**
+                     * New internal page to handle jsonoutput
+                     * we split the last item in the previous split to get the fname & lname from the POST methos of the html
+                     * we then populate the person class with the data from this.
+                     * changed content type tp "application/json" for optimal viewing pleasure :p
+                     */
+
+                    if (fileRequested.equals("/jsonoutput")) {
+                        String[] formData = split[split.length-1].split("&");
+                        Person p = new Person(formData[0].replace("fname=",""),
+                                formData[1].replace("lname=",""));
+                        JsonConverter js = new JsonConverter(p);
+                        byte[] jsonData = js.personToJsonString().getBytes();
+                        out.println("HTTP/1.1 200 OK");
+                        out.println("Server: Java HTTP Server from SSaurel : 1.0");
+                        out.println("Date: " + new Date());
+                        out.println("Content-type: application/json; charset=UTF-8");
+                        out.println("Content-length: " + jsonData.length);
+                        out.println();  // blank line between headers and content, very important !
+                        out.flush();    // flush character output stream buffer
+                        dataOut.write(jsonData,0, jsonData.length);
+                        dataOut.flush();
+                    }
+
+
                     File file = new File(WEB_ROOT, fileRequested);
                     int fileLength = (int) file.length();
                     String content = getContentType(fileRequested);
 
                     //If the http method is POST the requestPost method is called
                     if (method.equals("POST")){
+                        out.println("HTTP/1.1 200 OK");
+                        out.println("Server: Java HTTP Server from SSaurel : 1.0");
+                        out.println("Date: " + new Date());
+                        out.println("Content-type: " + content);
+                        out.println("Content-length: " + fileLength);
+                        out.println(); // blank line between headers and content, very important !
+                        out.flush(); // flush character output stream buffer
 
-                        requestPost(content, fileLength);
+                        if (!content.equals("application/x-www-form-urlencoded")) {
+                            out.println("Wrong content type");
+                        }
+
+                        if (fileLength <= 0) {
+                            out.println("Content length error");
+                        }
+                        //requestPost(content, fileLength);
+
+                        //old code that didnt work when i was fixing json
+                        /*
+                    String line;
+                    while (true) {
+                        if (in.readLine().equals("")) {
+                            char[] buf = new char[200];  // TODO: 2019-02-19 Fixa antalet char tecken
+                            in.read(buf);
+                            line = new String(buf);
+                            break;
+                        }
+                    }
+
+                    String[] lines = line.split("&");
+                    HashMap<String, String> hM = new HashMap<>();
+                    String key;
+                    String value;
+
+                    for (String s : lines) {
+                        String[] temp = s.split("=");
+                        key = temp[0];
+                        value = temp[1];
+                        hM.put(key, value);
+                    }
+
+                    for (String i : hM.keySet())
+                    {
+                        System.out.println("key: " + i + " value: " + hM.get(i));
+                    }*/
                     }
 
                     //If the http method is GET the requestPost method is called
                     else if (method.equals("GET")) { // GET method so we return content
 
-                        requestGet(content, fileLength, file);
+                        byte[] fileData = readFileData(file, fileLength);
+
+                        // send HTTP Headers
+                        out.println("HTTP/1.1 200 OK");
+                        out.println("Server: Java HTTP Server from SSaurel : 1.0");
+                        out.println("Date: " + new Date());
+                        out.println("Content-type: " + content);
+                        out.println("Content-length: " + fileLength);
+                        out.println(); // blank line between headers and content, very important !
+                        out.flush(); // flush character output stream buffer
+
+                        dataOut.write(fileData, 0, fileLength);
+                        dataOut.flush();
+                        //requestGet(content, fileLength, file);
                     }
 
                     if (verbose) {
@@ -183,7 +268,7 @@ import java.util.*;
 
 
         //This method handles GET requests from the http
-        private void requestGet(String content, int fileLength, File file) {
+        /*private void requestGet(String content, int fileLength, File file) {
 
             // send HTTP Headers
             out.println("HTTP/1.1 200 OK");
@@ -203,7 +288,7 @@ import java.util.*;
             }
         }
 
-        //This method handles POST requests from the http
+       /* //This method handles POST requests from the http
         private void requestPost(String content, int fileLength) {
 
             out.println("HTTP/1.1 200 OK");
@@ -266,7 +351,7 @@ import java.util.*;
 
             Person person = new Person(hM.get("firstName"), hM.get("lastName"));  //Creating a Person object from the
                                                                                    //http parameters
-        }
+        }*/
 
 
 
