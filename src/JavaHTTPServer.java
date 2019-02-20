@@ -93,6 +93,8 @@ import java.util.*;
                     System.out.println("Error: " + e.toString());
                 }
 
+                String[] contentType = split[2].split(" ");
+
                 /*// get first line of the request from the client
                 String input = in.readLine();
                 // we parse the request with a string tokenizer
@@ -159,19 +161,19 @@ import java.util.*;
 
                     File file = new File(WEB_ROOT, fileRequested);
                     int fileLength = (int) file.length();
-                    String content = getContentType(fileRequested);
+                    //String content = getContentType(fileRequested);
 
                     //If the http method is POST the requestPost method is called
                     if (method.equals("POST")){
                         out.println("HTTP/1.1 200 OK");
                         out.println("Server: Java HTTP Server from SSaurel : 1.0");
                         out.println("Date: " + new Date());
-                        out.println("Content-type: " + content);
+                        out.println("Content-type: " + contentType[1]);
                         out.println("Content-length: " + fileLength);
                         out.println(); // blank line between headers and content, very important !
                         out.flush(); // flush character output stream buffer
 
-                        if (!content.equals("application/x-www-form-urlencoded")) {
+                        if (!contentType[1].equals("application/x-www-form-urlencoded")) {
                             out.println("Wrong content type");
                         }
 
@@ -219,8 +221,8 @@ import java.util.*;
                         out.println("HTTP/1.1 200 OK");
                         out.println("Server: Java HTTP Server from SSaurel : 1.0");
                         out.println("Date: " + new Date());
-                        out.println("Content-type: " + content);
-                        out.println("Content-length: " + fileLength);
+                        out.println("Content-Type: " + contentType[1]);
+                        out.println("Content-Length: " + fileLength);
                         out.println(); // blank line between headers and content, very important !
                         out.flush(); // flush character output stream buffer
 
@@ -230,7 +232,7 @@ import java.util.*;
                     }
 
                     if (verbose) {
-                        System.out.println("File " + fileRequested + " of type " + content + " returned");
+                        System.out.println("File " + fileRequested + " of type " + contentType[1] + " returned");
                     }
                 }
 
