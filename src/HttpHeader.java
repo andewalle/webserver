@@ -1,7 +1,7 @@
 import java.io.PrintWriter;
 import java.util.Date;
 
-public class HttpHeader implements HttpResponse{
+public class HttpHeader implements Header{
 
     PrintWriter out;
     String statusCode;
