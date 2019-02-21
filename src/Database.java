@@ -3,7 +3,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Database {
 
-    List<Person> persons = new CopyOnWriteArrayList<>();
+    List<Person> persons = new CopyOnWriteArrayList<>();  //TODO CopyOnWrite???
 
     public void addPerson(Person person)
     {

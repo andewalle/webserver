@@ -24,4 +24,12 @@ public class Person implements DatabaseObject{
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
+
+
+    //TODO tostring eller inte?? 
+    @Override
+    public String toString() {
+        return String.format("firstName: " + firstName + "\nlastName: " + lastName);
+
+    }
 }

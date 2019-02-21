@@ -81,9 +81,9 @@ import java.util.*;
                         responseFile = fileRequested;
                         statusCode = "HTTP/1.1 200 OK";
                     }
-
-                    response(responseFile, content, statusCode);
                 }
+
+                response(responseFile, content, statusCode);
 
             } catch (FileNotFoundException fnfe) {
                 try {
@@ -91,9 +91,9 @@ import java.util.*;
                     statusCode = "HTTP/1.1 404 File Not Found";
                     response(FILE_NOT_FOUND, content, statusCode);
                    // fileNotFound(out, dataOut, fileRequested);  //TODO funkar de att använda samma metod som de andra responsen?
+                    System.out.println("File " + fileRequested + " not found");
                 } catch (IOException ioe) {
                     System.err.println("Error with file not found exception : " + ioe.getMessage());
-                    System.out.println("File " + fileRequested + " not found");
                 }
 
             } catch (IOException ioe) {
@@ -153,8 +153,9 @@ import java.util.*;
             //TODO Hantera olika inmatade objekt (t.ex person/företag) if-sats skicka med String för person/företag
             //TODO Skapa metod för att skapa objekt??
             //Creating an object from the HashMap parameters
-            DatabaseObject databaseObject = factory.createDatabaseObject("person", hM.get("firstName"), hM.get("lastName"));
+            DatabaseObject databaseObject = factory.createDatabaseObject("person", hM.get("fname"), hM.get("lname"));
             database.addPerson((Person)databaseObject);
+            database.listPersons();
         }
 
         private HashMap<String, String> splittingPostParameters()
@@ -205,6 +206,7 @@ import java.util.*;
                 hM.put(key, value);  //The keys and values are put in the HashMap
             }
 
+            //TODO behövs denna loop? kanske ändra parameternamn?
             //Looping and printing the parameters from the HashMap
             for (String i : hM.keySet()) {
 
@@ -342,8 +344,7 @@ import java.util.*;
             database.addPerson((Person)databaseObject);
 
         }
-
-        private void fileNotFound(PrintWriter out, OutputStream dataOut, String fileRequested) throws IOException {
+            private void fileNotFound(PrintWriter out, OutputStream dataOut, String fileRequested) throws IOException {
 
             File file = new File(WEB_ROOT, FILE_NOT_FOUND);
             int fileLength = (int) file.length();
@@ -359,6 +360,7 @@ import java.util.*;
             dataOut.flush();
 
             System.out.println("File " + fileRequested + " not found");
+
         }*/
 
     }
