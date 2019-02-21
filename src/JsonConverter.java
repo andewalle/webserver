@@ -1,7 +1,5 @@
 import com.google.gson.Gson;
 
-import java.io.*;
-
 public class JsonConverter {
     private Gson gson = new Gson();
     private Object o;
