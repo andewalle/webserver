@@ -9,15 +9,12 @@ import java.util.*;
 // Each Client Connection will be managed in a dedicated Thread
     public class JavaHTTPServer implements Runnable{
 
+        private final String SERVER_NAME = "Java HTTP Server from SSaurel : 1.0";
         static final File WEB_ROOT = new File(".");
         static final String DEFAULT_FILE = "index.html";
         static final String FILE_NOT_FOUND = "404.html";
         static final String METHOD_NOT_SUPPORTED = "not_supported.html";
-        // port to listen connection
-        static final int PORT = 6543;
 
-        // verbose mode
-        static final boolean verbose = true;
 
         // Client Connection via Socket Class
         private Socket connect;
@@ -26,36 +23,13 @@ import java.util.*;
             connect = c;
         }
 
+        Database database = new Database();
 
         // we manage our particular client connection
         BufferedReader in = null;
         PrintWriter out = null;
         BufferedOutputStream dataOut = null;
         String fileRequested = null;
-
-        //Server startup
-        public static void main(String[] args) {
-            try {
-                ServerSocket serverConnect = new ServerSocket(PORT);
-                System.out.println("Server started.\nListening for connections on port : " + PORT + " ...\n");
-
-                // we listen until user halts server execution
-                while (true) {
-                    JavaHTTPServer myServer = new JavaHTTPServer(serverConnect.accept());
-
-                    if (verbose) {
-                        System.out.println("Connection opened. (" + new Date() + ")");
-                    }
-
-                    // create dedicated thread to manage the client connection
-                    Thread thread = new Thread(myServer);
-                    thread.start();
-                }
-
-            } catch (IOException e) {
-                System.err.println("Server Connection error : " + e.getMessage());
-            }
-        }
 
         //run is where the requests are made
         @Override
@@ -79,28 +53,8 @@ import java.util.*;
 
                 // we support only GET and HEAD methods, we check
                 if (!method.equals("GET")  &&  !method.equals("HEAD") && !method.equals("POST")) {
-                    if (verbose) {
-                        System.out.println("501 Not Implemented : " + method + " method.");
-                    }
 
-                    // we return the not supported file to the client
-                    File file = new File(WEB_ROOT, METHOD_NOT_SUPPORTED);
-                    int fileLength = (int) file.length();
-                    String contentMimeType = "text/html";
-                    //read content to return to client
-                    byte[] fileData = readFileData(file, fileLength);
-
-                    // we send HTTP Headers with data to client
-                    out.println("HTTP/1.1 501 Not Implemented");
-                    out.println("Server: Java HTTP Server from SSaurel : 1.0");
-                    out.println("Date: " + new Date());
-                    out.println("Content-type: " + contentMimeType);
-                    out.println("Content-length: " + fileLength);
-                    out.println(); // blank line between headers and content, very important !
-                    out.flush(); // flush character output stream buffer
-                    // file
-                    dataOut.write(fileData, 0, fileLength);
-                    dataOut.flush();
+                    requestMethodNotSupported();
 
                 } else {
 
@@ -108,55 +62,18 @@ import java.util.*;
                         fileRequested += DEFAULT_FILE;
                     }
 
-
-
-
-
-
-
-                    //Helenas
-                    /*if (fileRequested.equals("/jsonoutput")) {
-                        String[] formData = input[input.length-1].split("&");
-                        Person p = new Person(formData[0].replace("fname=",""),
-                                formData[1].replace("lname=",""));
-                        JsonConverter js = new JsonConverter(p);
-                        byte[] jsonData = js.personToJsonString().getBytes();
-                        out.println("HTTP/1.1 200 OK");
-                        out.println("Server: Java HTTP Server from SSaurel : 1.0");
-                        out.println("Date: " + new Date());
-                        out.println("Content-type: application/json; charset=UTF-8");
-                        out.println("Content-length: " + jsonData.length);
-                        out.println();  // blank line between headers and content, very important !
-                        out.flush();    // flush character output stream buffer
-                        dataOut.write(jsonData,0, jsonData.length);
-                        dataOut.flush();
-                    }*/
-                    //Helenas
-
-
-
-
-
-
-
-                    File file = new File(WEB_ROOT, fileRequested);
-                    int fileLength = (int) file.length();
                     String content = getContentType(fileRequested);
 
                     //If the http method is POST the requestPost method is called
                     if (method.equals("POST")){
 
-                        requestPost(content, fileLength);
+                        requestPost(content);
                     }
 
                     //If the http method is GET the requestPost method is called
                     else if (method.equals("GET")) { // GET method so we return content
 
-                        requestGet(content, fileLength, file);
-                    }
-
-                    if (verbose) {
-                       // System.out.println("File " + fileRequested + " of type " + content + " returned");
+                        requestGet(content);
                     }
                 }
 
@@ -178,10 +95,6 @@ import java.util.*;
                 } catch (Exception e) {
                     System.err.println("Error closing stream : " + e.getMessage());
                 }
-
-                if (verbose) {
-                    System.out.println("Connection closed.\n");
-                }
             }
         }
 
@@ -191,22 +104,43 @@ import java.util.*;
 
 
 
+        private void requestMethodNotSupported() {
+
+            // we return the not supported file to the client
+            File file = new File(WEB_ROOT, METHOD_NOT_SUPPORTED);
+            int fileLength = (int) file.length();
+            String statusCode = "HTTP/1.1 501 Not Implemented";
+            String contentMimeType = "text/html";
+
+            // we send HTTP Headers with data to client
+            HttpHeader httpHeader = new HttpHeader(out, statusCode, SERVER_NAME, contentMimeType, fileLength);
+            httpHeader.write();
+
+
+            try {
+                byte[] fileData = readFileData(file, fileLength);  //read content to return to client
+                dataOut.write(fileData, 0, fileLength);
+                dataOut.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
 
         //This method handles GET requests from the http
-        private void requestGet(String content, int fileLength, File file) {
+        public void requestGet(String content) throws IOException {
 
-            // send HTTP Headers
-            out.println("HTTP/1.1 200 OK");
-            out.println("Server: Java HTTP Server from SSaurel : 1.0");
-            out.println("Date: " + new Date());
-            out.println("Content-type: " + content);
-            out.println("Content-length: " + fileLength);
-            out.println(); // blank line between headers and content, very important !
-            out.flush(); // flush character output stream buffer
+
+            File file = new File(WEB_ROOT, fileRequested);
+            int fileLength = (int) file.length();
+            byte[] fileData = readFileData(file, fileLength);
+            String statusCode = "HTTP/1.1 200 OK";
+
+            // we send HTTP Headers with data to client
+            HttpHeader httpHeader = new HttpHeader(out, statusCode, SERVER_NAME, content, fileLength);
+            httpHeader.write();
 
             try {
-                byte[] fileData = readFileData(file, fileLength);
                 dataOut.write(fileData, 0, fileLength);
                 dataOut.flush();
             } catch (IOException e) {
@@ -215,17 +149,72 @@ import java.util.*;
         }
 
         //This method handles POST requests from the http
-        private void requestPost(String content, int fileLength) {
+        public void requestPost(String content) {
 
-            if(!content.equals("application/x-www-form-urlencoded")){
-                System.out.println("Wrong content type");
-            }
-            if(fileLength <= 0){
-                System.out.println("Content length error");
+            HashMap<String, String> hM = splittingPostParameters();
+            DatabaseObjectsFactory factory = new DatabaseObjectsFactory();
+
+            String statusCode = "HTTP/1.1 200 OK";
+
+            JsonConverter js = new JsonConverter(hM);
+            String s = js.personToJsonString();
+            byte[] jsonData = s.getBytes();
+            int fileLength = jsonData.length;
+
+            // we send HTTP Headers with data to client
+            HttpHeader httpHeader = new HttpHeader(out, statusCode, SERVER_NAME, content, fileLength);
+            httpHeader.write();
+
+            try {
+                dataOut.write(jsonData, 0, fileLength);
+                dataOut.flush();
+                dataOut.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
+            //TODO Hantera olika inmatade objekt (t.ex person/företag) if-sats skicka med String för person/företag
+            //Creating an object from the HashMap parameters
+            DatabaseObject databaseObject = factory.createDatabaseObject("person", hM.get("firstName"), hM.get("lastName"));
+            database.addPerson((Person)databaseObject);
+
+        }
+
+        private void fileNotFound(PrintWriter out, OutputStream dataOut, String fileRequested) throws IOException {
+
+            File file = new File(WEB_ROOT, FILE_NOT_FOUND);
+            int fileLength = (int) file.length();
+            String statusCode = "HTTP/1.1 404 File Not Found";
+            String content = "text/html";
+            byte[] fileData = readFileData(file, fileLength);
+
+            // we send HTTP Headers with data to client
+            HttpHeader httpHeader = new HttpHeader(out, statusCode, SERVER_NAME, content, fileLength);
+            httpHeader.write();
+
+
+            dataOut.write(fileData, 0, fileLength);
+            dataOut.flush();
+
+            System.out.println("File " + fileRequested + " not found");
+        }
+
+        private HashMap<String, String> splittingPostParameters()
+        {
+
+            HashMap<String, String> hM = new HashMap<>();  //HashMap for storing parameters
+            String key;  //Storing temp. string keys for HashMap
+            String value;  //Storing temp. string values for HashMap
             String line;
             int content_length = 0;
+
+               /*  if(!content.equals("application/x-www-form-urlencoded")){  //TODO använda detta???  flytta ner i metoden?
+                    System.out.println("Wrong content type");
+                }
+                if(fileLength <= 0){
+                    System.out.println("Content length error");
+                }*/
+
             while(true){
                 try {
                     line = in.readLine();
@@ -245,18 +234,13 @@ import java.util.*;
             }
 
             String[] lines = line.split("&");   //Splitting the request string (line) at '&' to separate the
-                                                      // parameters and put in the vector "lines"
-
-            HashMap<String, String> hM = new HashMap<>();  //HashMap for storing parameters
-
-            String key;  //Storing temp. string keys for HashMap
-            String value;  //Storing temp. string values for HashMap
+                                                      // parameters and put in the array "lines"
 
             //Looping through vector lines (http parameters)
             for(String s : lines){
 
                 String[] temp = s.split("=");  //Splitting the parameters in the vector "lines" into key and value
-                                                      //pairs and putting in temp. vector "temp"
+                //pairs and putting in temp. vector "temp"
 
                 key = temp[0];  //key gets the String-value of each parameters name
                 value = temp[1];  //value gets the String-value of each parameters value
@@ -270,32 +254,8 @@ import java.util.*;
                 System.out.println("key: "+ i + " value: " + hM.get(i));
             }
 
-
-            Person person = new Person(hM.get("firstName"), hM.get("lastName"));  //Creating a Person object from the
-
-            JsonConverter js = new JsonConverter(person);
-            String s = js.personToJsonString();
-
-            byte[] jsonData = s.getBytes();
-
-            out.println("HTTP/1.1 200 OK");
-            out.println("Server: Java HTTP Server from SSaurel : 1.0");
-            out.println("Date: " + new Date());
-            out.println("Content-type: " + getContentType(fileRequested));
-            out.println("Content-length: " + jsonData.length);
-            out.println(); // blank line between headers and content, very important !
-            out.flush(); // flush character output stream buffer
-
-            try {
-                    dataOut.write(jsonData, 0, jsonData.length);
-                    dataOut.flush();
-                    dataOut.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
+            return hM;
         }
-
 
 
 
@@ -332,26 +292,5 @@ import java.util.*;
                 return "text/plain";
         }
 
-        private void fileNotFound(PrintWriter out, OutputStream dataOut, String fileRequested) throws IOException {
-            File file = new File(WEB_ROOT, FILE_NOT_FOUND);
-            int fileLength = (int) file.length();
-            String content = "text/html";
-            byte[] fileData = readFileData(file, fileLength);
-
-            out.println("HTTP/1.1 404 File Not Found");
-            out.println("Server: Java HTTP Server from SSaurel : 1.0");
-            out.println("Date: " + new Date());
-            out.println("Content-type: " + content);
-            out.println("Content-length: " + fileLength);
-            out.println(); // blank line between headers and content, very important !
-            out.flush(); // flush character output stream buffer
-
-            dataOut.write(fileData, 0, fileLength);
-            dataOut.flush();
-
-            if (verbose) {
-                System.out.println("File " + fileRequested + " not found");
-            }
-        }
 
     }
