@@ -221,21 +221,6 @@ public class JavaHTTPServer implements Runnable{
         return hM;
     }
 
-    private byte[] readFileData(File file, int fileLength) throws IOException {
-        FileInputStream fileIn = null;
-        byte[] fileData = new byte[fileLength];
-
-        try {
-            fileIn = new FileInputStream(file);
-            fileIn.read(fileData);
-        } finally {
-            if (fileIn != null)
-                fileIn.close();
-        }
-
-        return fileData;
-    }
-
     // return supported MIME Types
     private String getContentType(String fileRequested) {
         if (fileRequested.endsWith(".htm")  ||  fileRequested.endsWith(".html"))
