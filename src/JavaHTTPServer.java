@@ -73,6 +73,12 @@ public class JavaHTTPServer implements Runnable{
                     statusCode = "HTTP/1.1 200 OK";
                 }
 
+                else if (method.equals("HEAD")){
+
+                    responseFile = fileRequested;
+                    statusCode = "HTTP/1.1 200 OK";
+                }
+
                 //If the http method is GET the requestPost method is called
                 else if (method.equals("GET")) { // GET method so we return content
 
