@@ -3,9 +3,18 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 public class FileReader {
-    public static byte[] readData(File file, int fileLength) throws IOException {
-        FileInputStream fileIn = null;
-        byte[] fileData = new byte[fileLength];
+    File file;
+    int fileLength;
+    FileInputStream fileIn;
+    byte[] fileData;
+
+    public FileReader(File file, int fileLength){
+        this.file = file;
+        this.fileLength = fileLength;
+    }
+
+    public byte[] readData() throws IOException {
+        fileData = new byte[fileLength];
 
         try {
             fileIn = new FileInputStream(file);

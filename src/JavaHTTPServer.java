@@ -128,7 +128,8 @@ public class JavaHTTPServer implements Runnable{
         else {
             File file = new File(WEB_ROOT, responseFile);
             fileLength = (int) file.length();
-            fileData = readFileData(file, fileLength);
+            FileReader fileReader = new FileReader(file, fileLength);
+            fileData = fileReader.readData();
         }
 
         // we send HTTP Headers with data to client
