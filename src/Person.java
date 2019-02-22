@@ -26,7 +26,7 @@ public class Person implements DatabaseObject{
     }
 
 
-    //TODO tostring eller inte?? 
+    //TODO tostring eller inte??
     @Override
     public String toString() {
         return String.format("firstName: " + firstName + "\nlastName: " + lastName);
