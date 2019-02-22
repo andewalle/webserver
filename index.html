@@ -4,14 +4,26 @@
     <meta charset="UTF-8">
     <title>Hej</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="test.css">
 </head>
 <body>
-<p> Rad 1</p>
-<img src="fisk.jpg">
+<h1>Vår Web Server</h1>
+<h2>Länkar</h2>
+<a href="fisk.jpg">Länk till bild</a><br>
+<a href="Laboration1.pdf">Länk till pdf</a><br>
+<h2>Skapa person</h2>
 <form action="/jsonoutput" method="post">
-    First name: <input type="text" name="fname" placeholder="Lower case, all one word"><br>
-    Last name: <input type="text" name="lname" placeholder="Lower case, all one word"><br>
+    First name: <input type="text" name="firstName" placeholder="Lower case, all one word"><br>
+    Last name: <input type="text" name="lastName" placeholder="Lower case, all one word"><br>
     <input type="submit" value="Submit">
 </form>
+
+<h2>My First JavaScript</h2>
+
+<button type="button"
+        onclick="document.getElementById('demo').innerHTML = Date()">
+    Klicka för att visa tid och datum.</button>
+
+<p id="demo"></p>
 </body>
 </html>
