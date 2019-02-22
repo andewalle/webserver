@@ -248,6 +248,10 @@ public class JavaHTTPServer implements Runnable{
             return "text/css";
         else if (fileRequested.endsWith(".js"))
             return ("text/javascript");
+        else if (fileRequested.endsWith(".jpg"))
+            return "image/jpeg";
+        else if (fileRequested.endsWith(".jpeg"))
+            return "image/jpeg";
         else
             return "text/plain";
     }
