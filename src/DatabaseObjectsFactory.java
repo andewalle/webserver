@@ -10,6 +10,5 @@ public class DatabaseObjectsFactory {
         {
             return null;
         }
-
     }
 }
