@@ -3,10 +3,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 public class FileReader {
-    File file;
-    int fileLength;
-    FileInputStream fileIn;
-    byte[] fileData;
+
+    private File file;
+    private int fileLength;
+    private FileInputStream fileIn;
+    private byte[] fileData;
 
     public FileReader(File file, int fileLength){
         this.file = file;

@@ -3,12 +3,12 @@ import java.util.Date;
 
 public class HttpHeader implements Header{
 
-    PrintWriter out;
-    String statusCode;
-    String serverName;
-    String content;
-    int fileLength;
-    Date date;
+    private PrintWriter out;
+    private String statusCode;
+    private String serverName;
+    private String content;
+    private int fileLength;
+    private Date date;
 
     public HttpHeader(PrintWriter out, String statusCode, String serverName, String content, int fileLength)
     {

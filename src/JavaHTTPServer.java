@@ -6,26 +6,28 @@ import java.util.*;
 
 public class JavaHTTPServer implements Runnable{
 
-    private final String SERVER_NAME = "Java HTTP Server from SSaurel : 1.0";  //TODO Byta namn?
-    static final File WEB_ROOT = new File(".");  //TODO path till reserverad mapp inte C:/ disk
-    static final String DEFAULT_FILE = "index.html";
-    static final String FILE_NOT_FOUND = "404.html";
-    static final String METHOD_NOT_SUPPORTED = "not_supported.html";
+    private final String SERVER_NAME = "sic! server : 1.0";
+    private final File WEB_ROOT = new File(".");
+    private final String DEFAULT_FILE = "index.html";
+    private final String FILE_NOT_FOUND = "404.html";
+    private final String METHOD_NOT_SUPPORTED = "not_supported.html";
 
     // Client Connection via Socket Class
     private Socket connect;
 
-    public JavaHTTPServer(Socket c) {
+    private Database database;
+
+    public JavaHTTPServer(Socket c, Database database) {
+
         connect = c;
+        this.database = database;
     }
 
-    Database database = new Database();
-
     // we manage our particular client connection
-    BufferedReader in = null;
-    PrintWriter out = null;
-    BufferedOutputStream dataOut = null;
-    String fileRequested = null;
+    private BufferedReader in = null;
+    private PrintWriter out = null;
+    private BufferedOutputStream dataOut = null;
+    private String fileRequested = null;
 
     //run is where the requests are made
     @Override
@@ -94,7 +96,6 @@ public class JavaHTTPServer implements Runnable{
                 content = "text/html";
                 statusCode = "HTTP/1.1 404 File Not Found";
                 response(FILE_NOT_FOUND, content, statusCode);
-               // fileNotFound(out, dataOut, fileRequested);  //TODO funkar de att använda samma metod som de andra responsen?
                 System.out.println("File " + fileRequested + " not found");
             } catch (IOException ioe) {
                 System.err.println("Error with file not found exception : " + ioe.getMessage());
@@ -107,7 +108,7 @@ public class JavaHTTPServer implements Runnable{
                 in.close();
                 out.close();
                 dataOut.close();
-                connect.close(); // we close socket connection
+              //  connect.close(); // we close socket connection
             } catch (Exception e) {
                 System.err.println("Error closing stream : " + e.getMessage());
             }
@@ -122,6 +123,7 @@ public class JavaHTTPServer implements Runnable{
         if(responseFile.equals(""))  //If responseFile are empty it's a post request
         {
             HashMap<String, String> hM = splittingPostParameters();
+            createDatabaseObject(hM);
             fileData = convertToJson(hM);
             fileLength = fileData.length;
         }
@@ -140,27 +142,18 @@ public class JavaHTTPServer implements Runnable{
         dataOut.flush();
     }
 
-    //TODO Bygga ihop convertToJson och createPerson???
+    private void createDatabaseObject(HashMap<String, String> hM) {
+
+        PersonHandler personHandler = new PersonHandler(database, hM);
+        personHandler.createPerson();
+    }
+
     private byte[] convertToJson(HashMap<String, String> hM)
     {
-        createPerson(hM);
-
         JsonConverter js = new JsonConverter(hM);
         String s = js.personToJsonString();
         byte[] jsonData = s.getBytes();
         return jsonData;
-    }
-
-    private void createPerson(HashMap<String, String> hM)
-    {
-        DatabaseObjectsFactory factory = new DatabaseObjectsFactory();
-
-        //TODO Hantera olika inmatade objekt (t.ex person/företag) if-sats skicka med String för person/företag
-        //TODO Skapa metod för att skapa objekt??
-        //Creating an object from the HashMap parameters
-        DatabaseObject databaseObject = factory.createDatabaseObject("person", hM.get("firstName"), hM.get("lastName"));
-        database.addPerson((Person)databaseObject);
-        database.listPersons();
     }
 
     private HashMap<String, String> splittingPostParameters()
@@ -170,13 +163,6 @@ public class JavaHTTPServer implements Runnable{
         String value;  //Storing temp. string values for HashMap
         String line;
         int content_length = 0;
-
-           /*  if(!content.equals("application/x-www-form-urlencoded")){  //TODO använda detta???  flytta ner i metoden?
-                System.out.println("Wrong content type");
-            }
-            if(fileLength <= 0){
-                System.out.println("Content length error");
-            }*/
 
         while(true){
             try {
@@ -211,11 +197,10 @@ public class JavaHTTPServer implements Runnable{
             hM.put(key, value);  //The keys and values are put in the HashMap
         }
 
-        //TODO behövs denna loop? kanske ändra parameternamn?
         //Looping and printing the parameters from the HashMap
         for (String i : hM.keySet()) {
 
-            System.out.println("key: "+ i + " value: " + hM.get(i));
+            System.out.println( i + ": " + hM.get(i));
         }
 
         return hM;

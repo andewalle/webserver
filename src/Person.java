@@ -1,12 +1,22 @@
 public class Person implements DatabaseObject{
 
+    private String personalNumber;
     private String firstName;
     private String lastName;
 
-    public Person(String firstName, String lastName)
+    public Person(String personalNumber, String firstName, String lastName)
     {
+        this.personalNumber = personalNumber;
         this.firstName = firstName;
         this.lastName = lastName;
+    }
+
+    public String getPersonalNumber() {
+        return personalNumber;
+    }
+
+    public void setPersonalNumber(String personalNumber) {
+        this.personalNumber = personalNumber;
     }
 
     public String getFirstName() {
@@ -25,11 +35,10 @@ public class Person implements DatabaseObject{
         this.lastName = lastName;
     }
 
-
-    //TODO tostring eller inte??
     @Override
     public String toString() {
-        return String.format("firstName: " + firstName + "\nlastName: " + lastName);
+        return ("PersonalNumber: " + personalNumber + "\n     firstName: " + firstName +
+                "\n     lastName: " + lastName + "\n");
 
     }
 }

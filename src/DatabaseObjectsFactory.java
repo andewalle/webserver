@@ -1,14 +1,16 @@
 public class DatabaseObjectsFactory {
 
-    public DatabaseObject createDatabaseObject(String objectType, String firstName, String lastName)
+    public DatabaseObject createDatabaseObject(String objectType, String personalNumber, String firstName, String lastName)
     {
         if(objectType.equalsIgnoreCase("person"))
         {
-            return new Person(firstName, lastName);
+            return new Person(personalNumber, firstName, lastName);
         }
         else
         {
             return null;
         }
     }
+
+
 }

@@ -1,18 +1,24 @@
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.HashMap;
 
 public class Database {
 
-    List<Person> persons = new CopyOnWriteArrayList<>();  //TODO CopyOnWrite???
+    private HashMap<String, Person> persons = new HashMap<>();
+
+    public HashMap<String, Person> getPersons()
+    {
+        return persons;
+    }
 
     public void addPerson(Person person)
     {
-        persons.add(person);
+        String personalNumber = person.getPersonalNumber();
+
+        persons.put(personalNumber, person);
     }
 
     public void listPersons()
     {
-        for (Person person : persons) {
+        for (Person person : persons.values()) {
 
             System.out.println(person);
         }
@@ -22,7 +28,7 @@ public class Database {
     {
         boolean found = false;
 
-        for (Person person : persons) {
+        for (Person person : persons.values()) {
 
             if(person.getFirstName().toUpperCase().equals(name.toUpperCase()))
             {
